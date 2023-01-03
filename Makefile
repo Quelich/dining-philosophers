@@ -1,10 +1,10 @@
-all: phsp
+all: phsp 
 
 phsp: phsp.o
-	gcc phsp.o -o phsp
+	gcc phsp.o -o phsp -lm
 
 phsp.o: phsp.c
-	gcc -c phsp.c
+	gcc -c phsp.c -lm
 
 clean:
-	rm *.o phsp
+	rm *.o phsp 
