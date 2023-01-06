@@ -6,7 +6,6 @@
 #include <math.h>
 #include <unistd.h>
 
-
 /* CONSTANTS */
 #define MAX_PHSP 27
 #define EXPONENTIAL_LITERAL "exponential"
@@ -18,7 +17,6 @@
 #define EATING 2
 #define MAX_CONDITION 60000 // 60 seconds
 #define MIN_CONDITION 1 // 1 ms
-
 
 /* GLOBAL VARIABLES */
 int state[MAX_PHSP]; /* represents the state of philosopher */
@@ -32,6 +30,20 @@ int dine_num;
 pthread_mutex_t chopsticks[MAX_PHSP];
 sem_t sems[MAX_PHSP];
 
+// get the distribution type as an integer
+int get_dst(char *dst)
+{
+    if (strcmp(dst, EXPONENTIAL_LITERAL) == 0)
+    {
+        return EXPONENTIAL_DST;
+    }
+    else if (strcmp(dst, UNIFORM_LITERAL) == 0)
+    {
+        return UNIFORM_DST;
+    }
+    printf("Invalid distribution type\n");
+    exit(EXIT_FAILURE);
+}
 
 void think()
 {
@@ -57,16 +69,12 @@ void *philosopher(void *arg)
         printf("Philosopher %d is Thinking\n", i);
         think();
         printf("Philosopher %d is Hungry\n", i);
-        // pickup(left);
-        // pickup(right);
         pthread_mutex_lock(&chopsticks[left]);
         pthread_mutex_lock(&chopsticks[right]);
         // eat
         printf("Philosopher %d is Eating\n", i);
         eat(); 
         printf("Philosopher %d is Done Eating\n", i);
-        // putdown(left);
-        // putdown(right);
         pthread_mutex_unlock(&chopsticks[left]);
         pthread_mutex_unlock(&chopsticks[right]);
         j++;
@@ -74,30 +82,36 @@ void *philosopher(void *arg)
     pthread_exit(NULL);
 }
 
- 
+
 int main(int argc, int *argv[])
 {
 
-    num_phsp = MAX_PHSP;  /* number of philosophers */
-    
+    num_phsp = atoi(argv[1]);  /* number of philosophers */
+    min_think = atoi(argv[2]); /* minimum thinking time for a philosopher */
+    max_think = atoi(argv[3]); /* maximum thinking time for a philosopher */
+    min_dine = atoi(argv[4]);  /* minimum dining time for a philosopher */
+    max_dine = atoi(argv[5]);  /* maximum dining time for a philosopher */
+    char *dst = argv[6];
+    dst_type = get_dst(dst);
+    dine_num = atoi(argv[7]); /* Each philosopher will dine num times */
 
     // DEBUG
     printf("******************************\n");
     printf("num_phsp = %d\n", num_phsp);
+    printf("min_think = %d ms\n", min_think);
+    printf("max_think = %d ms\n", max_think);
+    printf("min_dine = %d ms\n", min_dine);
+    printf("max_dine = %d ms\n", max_dine);
+    printf("dst = %s\n", dst);
+    printf("num = %d\n", dine_num);
+    printf("dst type = %d\n", dst_type);
     printf("******************************\n");
     
     int i;
     int philosophers[num_phsp]; 
     pthread_t tids[num_phsp]; /* philosopher threads */
     
-    // initialize the semaphores
-    sem_init(&chopsticks, 0, 1);
-    
-    /* 
-       initialize the semaphores
-       each semaphore represents a chopstick
-       so the shared data is the number of chopsticks
-    */
+    // initialize the semaphores for each chopstick
     for (i = 0; i < num_phsp; i++)
     {
         pthread_mutex_init(&chopsticks[i], NULL);

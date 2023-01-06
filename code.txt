@@ -60,30 +60,10 @@ HELPER FUNCTIONS
 //     return ms / 1000;
 // }
 
-// // get the distribution type as an integer
-// int get_dst(char *dst)
-// {
-//     if (strcmp(dst, EXPONENTIAL_LITERAL) == 0)
-//     {
-//         return EXPONENTIAL_DST;
-//     }
-//     else if (strcmp(dst, UNIFORM_LITERAL) == 0)
-//     {
-//         return UNIFORM_DST;
-//     }
-//     printf("Invalid distribution type\n");
-//     exit(EXIT_FAILURE);
-// }
 
 
 MAIN
-// min_think = atoi(argv[2]); /* minimum thinking time for a philosopher */
-    // max_think = atoi(argv[3]); /* maximum thinking time for a philosopher */
-    // min_dine = atoi(argv[4]);  /* minimum dining time for a philosopher */
-    // max_dine = atoi(argv[5]);  /* maximum dining time for a philosopher */
-    // char *dst = argv[6];
-    // dst_type = get_dst(dst);
-    // dine_num = atoi(argv[7]); /* Each philosopher will dine num times */
+
     
     // Highest 60 secs, lowest 1 ms
     // if (min_think < MIN_CONDITION ||
@@ -96,10 +76,4 @@ MAIN
     // }
 
 
-      // printf("min_think = %d ms\n", min_think);
-    // printf("max_think = %d ms\n", max_think);
-    // printf("min_dine = %d ms\n", min_dine);
-    // printf("max_dine = %d ms\n", max_dine);
-    // printf("dst = %s\n", dst);
-    // printf("num = %d\n", dine_num);
-    // printf("dst type = %d\n", dst_type);
+  
