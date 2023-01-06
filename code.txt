@@ -1,24 +1,11 @@
 
 HELPER FUNCTIONS
-// int get_mean(int min, int max)
-// {
-//     return (min + max) / 2;
-// }
-
-// //todo: check the calculation again
-// double exprand(int min, int max)
-// {
-//     int lambda = get_mean(min, max);
-//     double u = (rand() % (max - min + 1)) + min;
-//     return -log(1 - u) / lambda;
-// }
 
 
-// //todo: check the calculation again
-// double unirand(int min, int max)
-// {
-//     return ((rand() / (1 + RAND_MAX)) * ((max - min) + 1)) + min;
-// }
+
+
+
+
 
 // get random think or dine time between specified boundaries
 // based on distribution type in milliseconds
@@ -55,25 +42,13 @@ HELPER FUNCTIONS
 //     exit(EXIT_FAILURE);
 // }
 
-// double to_sec(int ms)
-// {
-//     return ms / 1000;
-// }
 
 
 
 MAIN
 
     
-    // Highest 60 secs, lowest 1 ms
-    // if (min_think < MIN_CONDITION ||
-    //     max_think > MAX_CONDITION || 
-    //     min_dine < MIN_CONDITION  || 
-    //     max_dine > MAX_CONDITION)
-    // {
-    //     printf("Invalid high-low time bounds\n");
-    //     exit(EXIT_FAILURE);
-    // }
+
 
 
   

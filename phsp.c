@@ -5,6 +5,8 @@
 #include <pthread.h>
 #include <math.h>
 #include <unistd.h>
+#include <time.h>
+
 
 /* CONSTANTS */
 #define MAX_PHSP 27
@@ -15,8 +17,8 @@
 #define THINKING 0
 #define HUNGRY 1
 #define EATING 2
-#define MAX_CONDITION 60000 // 60 seconds
-#define MIN_CONDITION 1 // 1 ms
+#define MAX_TIME_COND 60000 // 60 seconds
+#define MIN_TIME_COND 1 // 1 ms
 
 /* GLOBAL VARIABLES */
 int state[MAX_PHSP]; /* represents the state of philosopher */
@@ -27,10 +29,40 @@ int max_dine;
 int min_dine;
 int dst_type;
 int dine_num;
-pthread_mutex_t chopsticks[MAX_PHSP];
+pthread_mutex_t chopsticks[MAX_PHSP]; // binary mutex for each chopstick
 sem_t sems[MAX_PHSP];
 
-// get the distribution type as an integer
+double get_mean(int min, int max)
+{
+    return (min + max) / 2;
+}
+
+int exprand(int min, int max)
+{
+    int lambda = get_mean(min, max);
+    int uni = unirand(min, max);
+    double u = (uni % (max - min + 1)) + min; 
+    return -log(1 - u) / lambda;
+}
+
+int unirand(int min, int max)
+{
+    int range = max - min + 1;
+    int secure_max = RAND_MAX - (RAND_MAX % range);
+    int rnd;
+    do
+    {
+        rnd = rand();
+    } while (rnd >= secure_max);
+    return min + (rnd % range);
+}
+
+int to_ns(int ms)
+{      
+    return ms * 1000000;
+}
+
+
 int get_dst(char *dst)
 {
     if (strcmp(dst, EXPONENTIAL_LITERAL) == 0)
@@ -43,6 +75,18 @@ int get_dst(char *dst)
     }
     printf("Invalid distribution type\n");
     exit(EXIT_FAILURE);
+}
+
+int get_thinktime()
+{
+    if (dst_type == EXPONENTIAL_DST)
+    {
+       
+    }
+    else if (dst_type == UNIFORM_DST)
+    {
+        return unirand(min_think, max_think);
+    }
 }
 
 void think()
@@ -85,15 +129,26 @@ void *philosopher(void *arg)
 
 int main(int argc, int *argv[])
 {
+    srand(time(NULL));
 
-    num_phsp = atoi(argv[1]);  /* number of philosophers */
-    min_think = atoi(argv[2]); /* minimum thinking time for a philosopher */
-    max_think = atoi(argv[3]); /* maximum thinking time for a philosopher */
-    min_dine = atoi(argv[4]);  /* minimum dining time for a philosopher */
-    max_dine = atoi(argv[5]);  /* maximum dining time for a philosopher */
+    num_phsp = atoi(argv[1]);  
+    min_think = atoi(argv[2]); 
+    max_think = atoi(argv[3]); 
+    min_dine = atoi(argv[4]);  
+    max_dine = atoi(argv[5]);  
     char *dst = argv[6];
     dst_type = get_dst(dst);
-    dine_num = atoi(argv[7]); /* Each philosopher will dine num times */
+    dine_num = atoi(argv[7]); 
+
+    // Highest 60 secs, lowest 1 ms
+    if (min_think < MIN_TIME_COND ||
+        max_think > MAX_TIME_COND || 
+        min_dine < MIN_TIME_COND  || 
+        max_dine > MAX_TIME_COND)
+    {
+        printf("Invalid high-low time bounds\n");
+        exit(EXIT_FAILURE);
+    }
 
     // DEBUG
     printf("******************************\n");
@@ -107,34 +162,41 @@ int main(int argc, int *argv[])
     printf("dst type = %d\n", dst_type);
     printf("******************************\n");
     
-    int i;
-    int philosophers[num_phsp]; 
-    pthread_t tids[num_phsp]; /* philosopher threads */
     
-    // initialize the semaphores for each chopstick
-    for (i = 0; i < num_phsp; i++)
-    {
-        pthread_mutex_init(&chopsticks[i], NULL);
-    }
+    int unitime_rand = unirand(min_think, max_think);
+    int exptime_rand = exprand(min_think, max_think);
+    printf("uniform rand = %d ms,\n", unitime_rand);
+    printf("exponential rand = %d ms,\n", exptime_rand);
+    
+    
+    // int i;
+    // int philosophers[num_phsp]; 
+    // pthread_t tids[num_phsp]; /* philosopher threads */
+    
+    // // initialize the semaphores for each chopstick
+    // for (i = 0; i < num_phsp; i++)
+    // {
+    //     pthread_mutex_init(&chopsticks[i], NULL);
+    // }
 
-    // initialize the philosophers
-    for (i = 0; i < num_phsp; i++)
-    {
-        philosophers[i] = i;
-    }
+    // // initialize the philosophers
+    // for (i = 0; i < num_phsp; i++)
+    // {
+    //     philosophers[i] = i;
+    // }
 
-    // initialize philosopher threads
-    for (i = 0; i < num_phsp; i++)
-    {
-        pthread_create(&tids[i], NULL, philosopher, &philosophers[i]);
-        printf("initialize philosopher %d\n", i + 1);
-    }
+    // // initialize philosopher threads
+    // for (i = 0; i < num_phsp; i++)
+    // {
+    //     pthread_create(&tids[i], NULL, philosopher, &philosophers[i]);
+    //     printf("initialize philosopher %d\n", i + 1);
+    // }
 
-    // wait for all threads to finish
-    for (i = 0; i < num_phsp; i++)
-    {
-        pthread_join(tids[i], NULL);
-    }
+    // // wait for all threads to finish
+    // for (i = 0; i < num_phsp; i++)
+    // {
+    //     pthread_join(tids[i], NULL);
+    // }
     
     exit(EXIT_SUCCESS);
 }
