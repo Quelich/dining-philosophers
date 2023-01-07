@@ -7,7 +7,6 @@
 #include <unistd.h>
 #include <time.h>
 
-
 /* CONSTANTS */
 #define MAX_PHSP 27
 #define EXPONENTIAL_LITERAL "exponential"
@@ -37,16 +36,27 @@ double get_mean(int min, int max)
     return (min + max) / 2;
 }
 
-int exprand(int min, int max)
+double rand_01()
 {
-    int lambda = get_mean(min, max);
-    int uni = unirand(min, max);
-    double u = (uni % (max - min + 1)) + min; 
-    return -log(1 - u) / lambda;
+    srand(time(NULL));  // feed random seed
+    return (double)rand() / RAND_MAX;
+}
+
+double exprand(int min, int max)
+{   
+    
+    double lambda = get_mean(min, max);
+    double exp_value;
+    double u = rand_01(); 
+    printf("lambda = %f\n", lambda);
+    printf("u = %f\n", u);
+    exp_value = -log(1 - u) / lambda;
+    return exp_value;
 }
 
 int unirand(int min, int max)
 {
+    srand(time(NULL));  // feed random seed
     int range = max - min + 1;
     int secure_max = RAND_MAX - (RAND_MAX % range);
     int rnd;
@@ -81,7 +91,7 @@ int get_thinktime()
 {
     if (dst_type == EXPONENTIAL_DST)
     {
-       
+       return exprand(min_think, max_think);
     }
     else if (dst_type == UNIFORM_DST)
     {
@@ -129,7 +139,7 @@ void *philosopher(void *arg)
 
 int main(int argc, int *argv[])
 {
-    srand(time(NULL));
+    
 
     num_phsp = atoi(argv[1]);  
     min_think = atoi(argv[2]); 
@@ -164,9 +174,11 @@ int main(int argc, int *argv[])
     
     
     int unitime_rand = unirand(min_think, max_think);
-    int exptime_rand = exprand(min_think, max_think);
+    double exptime_rand = exprand(min_think, max_think);
     printf("uniform rand = %d ms,\n", unitime_rand);
-    printf("exponential rand = %d ms,\n", exptime_rand);
+    printf("exponential rand = %f ms,\n", exptime_rand);
+    
+    
     
     
     // int i;
