@@ -24,7 +24,7 @@ int max_dine;
 int min_dine;
 int dst_type;
 int dine_num;
-int dine_times[MAX_PHSP] = {0};
+int hungry_times[MAX_PHSP] = {0};
 pthread_mutex_t chopsticks[MAX_PHSP]; // binary mutex for each chopstick
 sem_t sems[MAX_PHSP];
 
@@ -60,7 +60,7 @@ double exprand(int min, int max)
     //printf("lambda = %f\n", lambda);
     //printf("u = %f\n", u);
     //printf("exp_value = %f\n", ceil(exp_value));
-    return ceil(exp_value);
+    return round(exp_value);
 }
 
 // Generate a random number between min and max based on uniform distribution
