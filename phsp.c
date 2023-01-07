@@ -38,20 +38,28 @@ double get_mean(int min, int max)
 
 double rand_01()
 {
-    srand(time(NULL));  // feed random seed
+    srand(time(NULL)); 
     return (double)rand() / RAND_MAX;
 }
 
 double exprand(int min, int max)
 {   
     
-    double lambda = get_mean(min, max);
+    double lambda = 1 / get_mean(min, max);
     double exp_value;
-    double u = rand_01(); 
-    printf("lambda = %f\n", lambda);
-    printf("u = %f\n", u);
+    double u = rand_01();
     exp_value = -log(1 - u) / lambda;
-    return exp_value;
+
+    while (exp_value < min || exp_value > max)
+    {
+        u = rand_01();
+        exp_value = -log(1 - u) / lambda;
+        //printf("exp_value = %f\n", exp_value);
+    }
+    
+    //printf("lambda = %f\n", lambda);
+    //printf("u = %f\n", u);
+    return ceil(exp_value);
 }
 
 int unirand(int min, int max)
@@ -176,7 +184,7 @@ int main(int argc, int *argv[])
     int unitime_rand = unirand(min_think, max_think);
     double exptime_rand = exprand(min_think, max_think);
     printf("uniform rand = %d ms,\n", unitime_rand);
-    printf("exponential rand = %f ms,\n", exptime_rand);
+    printf("exponential rand = %d ms,\n", (int)exptime_rand);
     
     
     
