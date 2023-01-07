@@ -59,12 +59,13 @@ double exprand(int min, int max)
     
     //printf("lambda = %f\n", lambda);
     //printf("u = %f\n", u);
+    //printf("exp_value = %f\n", ceil(exp_value));
     return ceil(exp_value);
 }
 
 int unirand(int min, int max)
 {
-    srand(time(NULL));  // feed random seed
+    srand(time(NULL));  
     int range = max - min + 1;
     int secure_max = RAND_MAX - (RAND_MAX % range);
     int rnd;
@@ -72,12 +73,13 @@ int unirand(int min, int max)
     {
         rnd = rand();
     } while (rnd >= secure_max);
+    //printf("uni_rand = %d\n", min + (rnd % range));
     return min + (rnd % range);
 }
 
-int to_ns(int ms)
+int to_micro(int ms)
 {      
-    return ms * 1000000;
+    return ms * 1000;
 }
 
 
@@ -99,7 +101,7 @@ int get_thinktime()
 {
     if (dst_type == EXPONENTIAL_DST)
     {
-       return exprand(min_think, max_think);
+       return (int)exprand(min_think, max_think);
     }
     else if (dst_type == UNIFORM_DST)
     {
@@ -107,14 +109,28 @@ int get_thinktime()
     }
 }
 
-void think()
+int get_dinetime()
 {
-    sleep(2);
+    if (dst_type == EXPONENTIAL_DST)
+    {
+       return (int)exprand(min_dine, max_dine);
+    }
+    else if (dst_type == UNIFORM_DST)
+    {
+        return unirand(min_dine, max_dine);
+    }
 }
 
-void eat()
+void think(int ms)
 {
-    sleep(2);
+    int mic = to_micro(ms);
+    usleep(mic);
+}
+
+void eat(int ms)
+{
+    int mic = to_micro(ms);
+    usleep(mic);
 }
 
 // philosopher thread
@@ -129,13 +145,19 @@ void *philosopher(void *arg)
         i = *((int *)arg);
         // think
         printf("Philosopher %d is Thinking\n", i);
-        think();
+        int thinktime = get_thinktime();
+        //printf("thinktime = %d ms\n", thinktime);
+        /*HUNGRY TIME*/
+        think(thinktime);
         printf("Philosopher %d is Hungry\n", i);
         pthread_mutex_lock(&chopsticks[left]);
         pthread_mutex_lock(&chopsticks[right]);
-        // eat
+        // eat 
         printf("Philosopher %d is Eating\n", i);
-        eat(); 
+        int dinetime = get_dinetime();
+        //printf("dinetime = %d ms\n", dinetime);
+        /*HUNGRY TIME*/
+        eat(dinetime); 
         printf("Philosopher %d is Done Eating\n", i);
         pthread_mutex_unlock(&chopsticks[left]);
         pthread_mutex_unlock(&chopsticks[right]);
@@ -181,42 +203,35 @@ int main(int argc, int *argv[])
     printf("******************************\n");
     
     
-    int unitime_rand = unirand(min_think, max_think);
-    double exptime_rand = exprand(min_think, max_think);
-    printf("uniform rand = %d ms,\n", unitime_rand);
-    printf("exponential rand = %d ms,\n", (int)exptime_rand);
-    
-    
-    
-    
-    // int i;
-    // int philosophers[num_phsp]; 
-    // pthread_t tids[num_phsp]; /* philosopher threads */
-    
-    // // initialize the semaphores for each chopstick
-    // for (i = 0; i < num_phsp; i++)
-    // {
-    //     pthread_mutex_init(&chopsticks[i], NULL);
-    // }
 
-    // // initialize the philosophers
-    // for (i = 0; i < num_phsp; i++)
-    // {
-    //     philosophers[i] = i;
-    // }
+    int i;
+    int philosophers[num_phsp]; 
+    pthread_t tids[num_phsp]; /* philosopher threads */
+    
+    // initialize the semaphores for each chopstick
+    for (i = 0; i < num_phsp; i++)
+    {
+        pthread_mutex_init(&chopsticks[i], NULL);
+    }
 
-    // // initialize philosopher threads
-    // for (i = 0; i < num_phsp; i++)
-    // {
-    //     pthread_create(&tids[i], NULL, philosopher, &philosophers[i]);
-    //     printf("initialize philosopher %d\n", i + 1);
-    // }
+    // initialize the philosophers
+    for (i = 0; i < num_phsp; i++)
+    {
+        philosophers[i] = i;
+    }
 
-    // // wait for all threads to finish
-    // for (i = 0; i < num_phsp; i++)
-    // {
-    //     pthread_join(tids[i], NULL);
-    // }
+    // initialize philosopher threads
+    for (i = 0; i < num_phsp; i++)
+    {
+        pthread_create(&tids[i], NULL, philosopher, &philosophers[i]);
+        printf("initialize philosopher %d\n", i + 1);
+    }
+
+    // wait for all threads to finish
+    for (i = 0; i < num_phsp; i++)
+    {
+        pthread_join(tids[i], NULL);
+    }
     
     exit(EXIT_SUCCESS);
 }
