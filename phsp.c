@@ -6,6 +6,7 @@
 #include <math.h>
 #include <unistd.h>
 #include <time.h>
+#include <sys/time.h>
 
 /* CONSTANTS */
 #define MAX_PHSP 27
@@ -24,9 +25,37 @@ int max_dine;
 int min_dine;
 int dst_type;
 int dine_num;
-int hungry_times[MAX_PHSP] = {0};
+double hungry_times[MAX_PHSP];
 pthread_mutex_t chopsticks[MAX_PHSP]; // binary mutex for each chopstick
 sem_t sems[MAX_PHSP];
+
+double get_avg_hungrytime()
+{   
+    int i;
+    double sum, avg;
+    for (i = 0; i < num_phsp; i++)
+    {
+        sum += hungry_times[i];
+    }
+
+    avg = sum / num_phsp;
+    return avg;
+}
+
+double get_std_deviation_hungrytime()
+{    
+    int i;
+    double std_dev;
+    double avg = get_avg_hungrytime();
+
+    for (i = 0; i < num_phsp; i++)
+    {
+        std_dev += pow(hungry_times[i] - avg, 2);
+    }
+
+    std_dev = sqrt(std_dev / (num_phsp - 1));
+    return std_dev;
+}
 
 // Calculate mean according to given min and max
 double get_mean(int min, int max)
@@ -166,14 +195,20 @@ void *philosopher(void *arg)
     int right = (i + 1) % num_phsp;
     while (j < num_phsp)
     {   
-        /*HUNGRY TIME*/
+        
+        struct timespec begin, end;             /*START TICKING UNGRY TIME*/
+        clock_gettime(CLOCK_REALTIME, &begin);
         i = *((int *)arg);
         // THINK
         int thinktime = get_thinktime();
         think(thinktime);
-        printf("Philosopher %d is Hungry\n", i);
         wait(left, right);
-        /*HUNGRY TIME*/
+        clock_gettime(CLOCK_REALTIME, &end);    /*STOP TICKING HUNGRY TIME*/
+        long seconds = end.tv_sec - begin.tv_sec;
+        long nanoseconds = end.tv_nsec - begin.tv_nsec;
+        double elapsed_ms= (seconds + nanoseconds*1e-9) * 1000;
+        printf("Philosopher %d is Hungry for %f ms\n", i, elapsed_ms);
+        hungry_times[i] += elapsed_ms;
         // EAT
         printf("Philosopher %d is Eating\n", i);
         int dinetime = get_dinetime();       
@@ -248,6 +283,18 @@ int main(int argc, int *argv[])
     {
         pthread_join(tids[i], NULL);
     }
+
+    // Print results
+
+    for ( i = 0; i < num_phsp; i++)
+    {
+        printf("Hungry time for philosopher %d: %f\n", i, hungry_times[i]);
+    }
+    
+    double avg = get_avg_hungrytime();
+    double std_dev = get_std_deviation_hungrytime();
+    printf("Average hungry time: %f ms\n", avg);
+    printf("Standard deviation of hungry time: %f ms\n", std_dev);
     
     exit(EXIT_SUCCESS);
 }
