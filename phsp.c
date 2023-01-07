@@ -24,6 +24,7 @@ int max_dine;
 int min_dine;
 int dst_type;
 int dine_num;
+int dine_times[MAX_PHSP] = {0};
 pthread_mutex_t chopsticks[MAX_PHSP]; // binary mutex for each chopstick
 sem_t sems[MAX_PHSP];
 
@@ -129,18 +130,30 @@ int get_dinetime()
     exit(EXIT_FAILURE);
 }
 
-// Demonstrate thinking 
+// Demonstrate thinking by simply waiting for awhile
 void think(int ms)
 {
     int mic = to_micro(ms);
     usleep(mic);
 }
 
-// Demonstrate eating
+// Demonstrate eating by simply waiting for awhile
 void eat(int ms)
 {
     int mic = to_micro(ms);
     usleep(mic);
+}
+
+void wait(int l, int r)
+{
+    pthread_mutex_lock(&chopsticks[l]);
+    pthread_mutex_lock(&chopsticks[r]);
+}
+
+void signal(int l, int r)
+{
+    pthread_mutex_unlock(&chopsticks[l]);
+    pthread_mutex_unlock(&chopsticks[r]);
 }
 
 // philosopher thread
@@ -159,16 +172,14 @@ void *philosopher(void *arg)
         int thinktime = get_thinktime();
         think(thinktime);
         printf("Philosopher %d is Hungry\n", i);
-        pthread_mutex_lock(&chopsticks[left]);
-        pthread_mutex_lock(&chopsticks[right]);
+        wait(left, right);
         /*HUNGRY TIME*/
         // EAT
         printf("Philosopher %d is Eating\n", i);
         int dinetime = get_dinetime();       
         eat(dinetime); 
         printf("Philosopher %d is Done Eating\n", i);
-        pthread_mutex_unlock(&chopsticks[left]);
-        pthread_mutex_unlock(&chopsticks[right]);
+        signal(left, right);
         j++;
     }
     pthread_exit(NULL);
@@ -209,7 +220,6 @@ int main(int argc, int *argv[])
     printf("******************************\n");
     
     
-
     int i;
     int philosophers[num_phsp]; 
     pthread_t tids[num_phsp]; /* philosopher threads */
