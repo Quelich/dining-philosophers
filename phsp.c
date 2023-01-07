@@ -13,14 +13,10 @@
 #define UNIFORM_LITERAL "uniform"
 #define EXPONENTIAL_DST 1
 #define UNIFORM_DST 0
-#define THINKING 0
-#define HUNGRY 1
-#define EATING 2
 #define MAX_TIME_COND 60000 // 60 seconds
 #define MIN_TIME_COND 1 // 1 ms
 
 /* GLOBAL VARIABLES */
-int state[MAX_PHSP]; /* represents the state of philosopher */
 int num_phsp;
 int max_think;
 int min_think;
@@ -31,17 +27,20 @@ int dine_num;
 pthread_mutex_t chopsticks[MAX_PHSP]; // binary mutex for each chopstick
 sem_t sems[MAX_PHSP];
 
+// Calculate mean according to given min and max
 double get_mean(int min, int max)
 {
     return (min + max) / 2;
 }
 
+// Generate a random number between 0 and 1
 double rand_01()
 {
     srand(time(NULL)); 
     return (double)rand() / RAND_MAX;
 }
 
+// Generate a random number between min and max based on exponential distribution
 double exprand(int min, int max)
 {   
     
@@ -63,6 +62,7 @@ double exprand(int min, int max)
     return ceil(exp_value);
 }
 
+// Generate a random number between min and max based on uniform distribution
 int unirand(int min, int max)
 {
     srand(time(NULL));  
@@ -77,12 +77,14 @@ int unirand(int min, int max)
     return min + (rnd % range);
 }
 
+// Convert milliseconds to microseconds
 int to_micro(int ms)
 {      
     return ms * 1000;
 }
 
 
+// Get distribution type from command line argument
 int get_dst(char *dst)
 {
     if (strcmp(dst, EXPONENTIAL_LITERAL) == 0)
@@ -97,6 +99,7 @@ int get_dst(char *dst)
     exit(EXIT_FAILURE);
 }
 
+// Calculate think time based on distribution type
 int get_thinktime()
 {
     if (dst_type == EXPONENTIAL_DST)
@@ -107,8 +110,11 @@ int get_thinktime()
     {
         return unirand(min_think, max_think);
     }
+    printf("Unable to get think time\n");
+    exit(EXIT_FAILURE);
 }
 
+// Calculate dine time based on distribution type
 int get_dinetime()
 {
     if (dst_type == EXPONENTIAL_DST)
@@ -119,14 +125,18 @@ int get_dinetime()
     {
         return unirand(min_dine, max_dine);
     }
+    printf("Unable to get dine time\n");
+    exit(EXIT_FAILURE);
 }
 
+// Demonstrate thinking 
 void think(int ms)
 {
     int mic = to_micro(ms);
     usleep(mic);
 }
 
+// Demonstrate eating
 void eat(int ms)
 {
     int mic = to_micro(ms);
@@ -138,25 +148,23 @@ void *philosopher(void *arg)
 {
     int  i = *((int *)arg);
     int j = 0;
+    int k;
     int left = i;
     int right = (i + 1) % num_phsp;
     while (j < num_phsp)
-    {
-        i = *((int *)arg);
-        // think
-        printf("Philosopher %d is Thinking\n", i);
-        int thinktime = get_thinktime();
-        //printf("thinktime = %d ms\n", thinktime);
+    {   
         /*HUNGRY TIME*/
+        i = *((int *)arg);
+        // THINK
+        int thinktime = get_thinktime();
         think(thinktime);
         printf("Philosopher %d is Hungry\n", i);
         pthread_mutex_lock(&chopsticks[left]);
         pthread_mutex_lock(&chopsticks[right]);
-        // eat 
-        printf("Philosopher %d is Eating\n", i);
-        int dinetime = get_dinetime();
-        //printf("dinetime = %d ms\n", dinetime);
         /*HUNGRY TIME*/
+        // EAT
+        printf("Philosopher %d is Eating\n", i);
+        int dinetime = get_dinetime();       
         eat(dinetime); 
         printf("Philosopher %d is Done Eating\n", i);
         pthread_mutex_unlock(&chopsticks[left]);
@@ -169,8 +177,6 @@ void *philosopher(void *arg)
 
 int main(int argc, int *argv[])
 {
-    
-
     num_phsp = atoi(argv[1]);  
     min_think = atoi(argv[2]); 
     max_think = atoi(argv[3]); 
@@ -198,7 +204,7 @@ int main(int argc, int *argv[])
     printf("min_dine = %d ms\n", min_dine);
     printf("max_dine = %d ms\n", max_dine);
     printf("dst = %s\n", dst);
-    printf("num = %d\n", dine_num);
+    printf("dine num = %d\n", dine_num);
     printf("dst type = %d\n", dst_type);
     printf("******************************\n");
     
