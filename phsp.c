@@ -25,6 +25,7 @@ int max_dine;
 int min_dine;
 int dst_type;
 int dine_num;
+int dine_count[MAX_PHSP];
 double hungry_times[MAX_PHSP];
 pthread_mutex_t chopsticks[MAX_PHSP]; // binary mutex for each chopstick
 sem_t sems[MAX_PHSP];
@@ -189,13 +190,11 @@ void signal(int l, int r)
 void *philosopher(void *arg)
 {
     int  i = *((int *)arg);
-    int j = 0;
     int k;
     int left = i;
     int right = (i + 1) % num_phsp;
-    while (j < num_phsp)
+    while (dine_count[i] < dine_num)
     {   
-        
         struct timespec begin, end;             /*START TICKING UNGRY TIME*/
         clock_gettime(CLOCK_REALTIME, &begin);
         i = *((int *)arg);
@@ -214,8 +213,8 @@ void *philosopher(void *arg)
         int dinetime = get_dinetime();       
         eat(dinetime); 
         printf("Philosopher %d is Done Eating\n", i);
+        dine_count[i]++;
         signal(left, right);
-        j++;
     }
     pthread_exit(NULL);
 }
@@ -295,6 +294,11 @@ int main(int argc, int *argv[])
     double std_dev = get_std_deviation_hungrytime();
     printf("Average hungry time: %f ms\n", avg);
     printf("Standard deviation of hungry time: %f ms\n", std_dev);
+
+    for ( i = 0; i < num_phsp; i++)
+    {
+        printf("Dine count for philosopher %d: %d\n", i, dine_count[i]);
+    }
     
     exit(EXIT_SUCCESS);
 }
