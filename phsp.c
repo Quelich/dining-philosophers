@@ -28,7 +28,6 @@ int dine_num;
 int dine_count[MAX_PHSP];
 double hungry_times[MAX_PHSP];
 pthread_mutex_t chopsticks[MAX_PHSP]; // binary mutex for each chopstick
-sem_t sems[MAX_PHSP];
 
 double get_avg_hungrytime()
 {   
