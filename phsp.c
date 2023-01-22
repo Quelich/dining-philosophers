@@ -1,3 +1,8 @@
+/*
+    METADATA
+    - time unit: millisecond (ms)
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,7 +32,9 @@ int dst_type;
 int dine_num;
 int dine_count[MAX_PHSP];
 double hungry_times[MAX_PHSP];
-pthread_mutex_t chopsticks[MAX_PHSP]; // binary mutex for each chopstick
+
+/* SYNCHRONOZATION */
+pthread_mutex_t chopsticks[MAX_PHSP];
 
 double get_avg_hungrytime()
 {   
@@ -78,17 +85,11 @@ double exprand(int min, int max)
     double exp_value;
     double u = rand_01();
     exp_value = -log(1 - u) / lambda;
-
     while (exp_value < min || exp_value > max)
     {
         u = rand_01();
         exp_value = -log(1 - u) / lambda;
-        //printf("exp_value = %f\n", exp_value);
     }
-    
-    //printf("lambda = %f\n", lambda);
-    //printf("u = %f\n", u);
-    //printf("exp_value = %f\n", ceil(exp_value));
     return round(exp_value);
 }
 
@@ -103,7 +104,6 @@ int unirand(int min, int max)
     {
         rnd = rand();
     } while (rnd >= secure_max);
-    //printf("uni_rand = %d\n", min + (rnd % range));
     return min + (rnd % range);
 }
 
@@ -112,7 +112,6 @@ int to_micro(int ms)
 {      
     return ms * 1000;
 }
-
 
 // Get distribution type from command line argument
 int get_dst(char *dst)
@@ -239,20 +238,7 @@ int main(int argc, int *argv[])
         printf("Invalid high-low time bounds\n");
         exit(EXIT_FAILURE);
     }
-
-    // DEBUG
-    printf("******************************\n");
-    printf("num_phsp = %d\n", num_phsp);
-    printf("min_think = %d ms\n", min_think);
-    printf("max_think = %d ms\n", max_think);
-    printf("min_dine = %d ms\n", min_dine);
-    printf("max_dine = %d ms\n", max_dine);
-    printf("dst = %s\n", dst);
-    printf("dine num = %d\n", dine_num);
-    printf("dst type = %d\n", dst_type);
-    printf("******************************\n");
-    
-    
+  
     int i;
     int philosophers[num_phsp]; 
     pthread_t tids[num_phsp]; /* philosopher threads */
@@ -283,7 +269,6 @@ int main(int argc, int *argv[])
     }
 
     // Print results
-
     for ( i = 0; i < num_phsp; i++)
     {
         printf("Hungry time for philosopher %d: %f\n", i, hungry_times[i]);
